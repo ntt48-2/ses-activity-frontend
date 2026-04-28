@@ -1,54 +1,123 @@
-# React + TypeScript + Vite
+# symptom-checker-frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+症状・薬チェッカーのフロントエンド。  
+Next.js 15 + TypeScript + Tailwind CSS で構成。
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 技術スタック
 
-## Expanding the ESLint configuration
+| 種別 | 内容 |
+|---|---|
+| フレームワーク | Next.js 15（App Router） |
+| 言語 | TypeScript |
+| スタイリング | Tailwind CSS |
+| 実行環境 | Node.js 20 |
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 開発環境構築
+
+### 前提条件
+
+- Docker / Docker Compose がインストール済みであること
+- バックエンド（symptom-checker-backend）が起動済みであること
+
+### 1. リポジトリをクローン
+
+```bash
+git clone https://github.com/your-org/symptom-checker-frontend.git
+cd symptom-checker-frontend
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Docker で起動
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+初回起動時は `npm install` が走るため数分かかる。
+
+### 3. 起動確認
+
+ブラウザで http://localhost:3000 を開いて画面が表示されれば成功。
+
+---
+
+## VSCode でコード補完を有効にする（推奨）
+
+Docker 内で `node_modules` が作成されるが、VSCode のコード補完はローカルの `node_modules` を参照するため、ローカルにも別途インストールが必要。
+
+### nvm（Node バージョン管理）のインストール
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc  # zsh の場合は ~/.zshrc
+```
+
+### Node.js 20 をインストール
+
+```bash
+nvm install 20
+nvm use 20
+```
+
+### ローカルに依存関係をインストール
+
+```bash
+# node_modules の権限エラーが出る場合
+sudo chown -R $USER:$USER .
+
+npm install --legacy-peer-deps
+```
+
+---
+
+## URL一覧
+
+| 環境 | URL |
+|---|---|
+| ローカル（フロントエンド） | http://localhost:3000 |
+| バックエンドAPI | http://localhost:8080 |
+
+---
+
+## バックエンドとの起動順序
+
+バックエンドを先に起動してからフロントエンドを起動する。
+
+```bash
+# ターミナル1：バックエンド
+cd symptom-checker-backend
+docker compose -f docker-compose.dev.yml up
+
+# ターミナル2：フロントエンド
+cd symptom-checker-frontend
+docker compose -f docker-compose.dev.yml up
+```
+
+---
+
+## ホットリロード
+
+ファイルを保存するとブラウザが自動で更新される。  
+Docker 環境では `WATCHPACK_POLLING=true` で動作させているため、保存から反映まで 1〜2 秒かかる場合がある。
+
+---
+
+## ディレクトリ構成
+
+```
+src/
+└── app/
+    ├── layout.tsx                   # 全ページ共通の外枠（ヘッダー・フッター）
+    ├── page.tsx                     # トップページ（/）
+    ├── globals.css                  # グローバルCSS（Tailwind読み込み）
+    ├── symptoms/
+    │   └── result/
+    │       └── page.tsx             # 症状チェック結果（/symptoms/result）
+    └── drugs/
+        ├── page.tsx                 # 薬チェック（/drugs）
+        └── result/
+            └── page.tsx             # 薬チェック結果（/drugs/result）
 ```
